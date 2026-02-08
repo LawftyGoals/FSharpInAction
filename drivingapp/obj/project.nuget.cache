@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "EXX+lQa7AEM=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\mymsn\\Documents\\FSharp\\InAction\\drivingapp\\drivingapp.fsproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\mymsn\\.nuget\\packages\\fsharp.core\\10.0.102\\fsharp.core.10.0.102.nupkg.sha512"
+  ],
+  "logs": []
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<linker>
+  <assembly fullname="drivingapp">
+    <resource name="FSharpSignatureData.drivingapp" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedData.drivingapp" action="remove"></resource>
+    <resource name="FSharpSignatureDataB.drivingapp" action="remove"></resource>
+    <resource name="FSharpSignatureCompressedDataB.drivingapp" action="remove"></resource>
+    <resource name="FSharpOptimizationData.drivingapp" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedData.drivingapp" action="remove"></resource>
+    <resource name="FSharpOptimizationDataB.drivingapp" action="remove"></resource>
+    <resource name="FSharpOptimizationCompressedDataB.drivingapp" action="remove"></resource>
+    <resource name="FSharpOptimizationInfo.drivingapp" action="remove"></resource>
+    <resource name="FSharpSignatureInfo.drivingapp" action="remove"></resource>
+  </assembly>
+</linker>
