@@ -99,3 +99,16 @@ let oneToSix = numbers[1..6]
 let sqrs = [ for i in 1..10 -> i * i ]
 
 let test = [ 0..2..9 ]
+
+
+// .NET ARRAY
+let numArray = [| 1..10 |]
+let secondArrIt = numArray[1]
+numArray[1] <- 4
+printfn $"{secondArrIt} {numArray[1]}"
+
+// .NET SEQUENCE A IENUMERABLE WRAPPER
+let numSeq = seq { 1..10 }
+let secondEl = numSeq |> Seq.item 1
+// let worksOr = numSeq.item 1 does not work must be piped?
+let mappedSeq = numSeq |> Seq.map (fun num -> num * num)
