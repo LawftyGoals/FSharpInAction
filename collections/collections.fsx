@@ -112,3 +112,36 @@ let numSeq = seq { 1..10 }
 let secondEl = numSeq |> Seq.item 1
 // let worksOr = numSeq.item 1 does not work must be piped?
 let mappedSeq = numSeq |> Seq.map (fun num -> num * num)
+
+let comp =
+    seq {
+        1
+        2
+
+        if System.DateTime.Today.DayOfWeek = System.DayOfWeek.Tuesday then
+            99
+
+        4
+    }
+
+// MAP F# version of dictionary
+let lookupMap = Map [ (1, 2); (3, 4) ]
+let newLookupMap = lookupMap.Add(5, 6)
+let newLookupMap2 = lookupMap |> Map.add (7, 8)
+
+//SET
+type setType = { Name: string }
+
+let salesEmployees =
+    Set[{ Name = "Boss" }
+        { Name = "Babs" }]
+
+let bonusEmployees = Set [ { Name = "Babs" }; { Name = "Tanya" } ]
+
+let allBonusesForSalesStaff = salesEmployees |> Set.isSubset bonusEmployees
+let salesWithoutBonuses = salesEmployees - bonusEmployees
+let allEmployees = salesEmployees + bonusEmployees
+
+let listOfNumbers = [ 1; 1; 2; 3; 4; 5; 5 ]
+let numSet = Set.ofList listOfNumbers
+let numArray2 = Set.toArray numSet
