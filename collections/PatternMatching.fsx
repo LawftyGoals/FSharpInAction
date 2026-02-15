@@ -48,6 +48,7 @@ let canTakeOutALoanRecursive customer =
     | { YearsOfHistory = 1; Address = _ } -> false
     | _ -> true
 
+//EXERCISE 8.2
 let csmr =
     { YearsOfHistory = 1
       Overdraft =
@@ -84,3 +85,42 @@ let bindingSymbols customer =
 
 
 printfn $"{bindingSymbols csmr}"
+
+
+//DISCRIMINATED UNION
+
+type ContactMethod =
+    | Email of address: string
+    | Telephone of country: string * number: string
+    | Post of
+        {| Line1: string
+           Line2: string
+           City: string
+           Country: string |}
+
+type customerDu =
+    { Name: string
+      Age: int
+      ContactMethod: ContactMethod }
+
+let customer =
+    { Name = "bob"
+      Age = 100
+      ContactMethod = Email "akdak@akdak.no" }
+
+//DOES NOT WORK
+customer.ContactMethod = Telephone("47", "552334232")
+
+printfn $"{customer.ContactMethod}"
+
+let message = "Discriminated Unions FTW!"
+
+match customer.ContactMethod with
+| Email address -> $"Emailing '{message}' to {address}"
+| Telephone(country, number) -> $"Calling {country}-{number} with the message '{message}'"
+| Post postDetails -> $"Printing letter with contents '{message}' to {postDetails.Line1} {postDetails.City}..."
+
+match customer.ContactMethod with
+| Telephone(country, number) -> $"Calling {country}-{number} with the message '{message}'"
+| Post postDetails -> $"Printing letter with contents '{message}' to {postDetails.Line1} {postDetails.City}..."
+| Email address -> $"Emailing '{message}' to {address}"
