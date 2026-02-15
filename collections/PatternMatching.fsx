@@ -87,6 +87,28 @@ let bindingSymbols customer =
 printfn $"{bindingSymbols csmr}"
 
 
+//COLLECTION MATCHING
+
+
+type LoanRequest =
+    { YearsOfHistory: int
+      HasOverdraft: bool
+      LoanRequestAmount: decimal
+      IsLargeRequest: bool }
+
+
+let summeriseLoanRequest requests =
+    match requests with
+    | [] -> "No requests made!"
+    | [ { IsLargeRequest = true } ] -> "Single large request!"
+    | [ { IsLargeRequest = true }; { IsLargeRequest = true } ] -> "Tow large requests!"
+    | { IsLargeRequest = false } :: remainingRequests ->
+        $"Several items, first is not a large request. Remaining: {remainingRequests}"
+    | _ :: { HasOverdraft = true } :: _ -> "Second item has overdraft!"
+    | _ -> "Everything else"
+
+
+
 //DISCRIMINATED UNION
 
 type ContactMethod =
