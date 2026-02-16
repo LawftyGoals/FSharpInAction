@@ -110,6 +110,9 @@ let summeriseLoanRequest requests =
 
 
 //DISCRIMINATED UNION
+type TelephoneNumber =
+    | Local of number: string
+    | International of countryCode: string * number: string
 
 type ContactMethod =
     | Email of address: string
@@ -119,6 +122,9 @@ type ContactMethod =
            Line2: string
            City: string
            Country: string |}
+    | SMS of TelephoneNumber
+
+
 
 type customerDu =
     { Name: string
@@ -136,6 +142,7 @@ customer.ContactMethod = Telephone("47", "552334232")
 printfn $"{customer.ContactMethod}"
 
 let message = "Discriminated Unions FTW!"
+let smsContact = SMS(Local "123-4567")
 
 match customer.ContactMethod with
 | Email address -> $"Emailing '{message}' to {address}"
@@ -146,3 +153,36 @@ match customer.ContactMethod with
 | Telephone(country, number) -> $"Calling {country}-{number} with the message '{message}'"
 | Post postDetails -> $"Printing letter with contents '{message}' to {postDetails.Line1} {postDetails.City}..."
 | Email address -> $"Emailing '{message}' to {address}"
+| SMS(International(code, number)) -> $"this is the international number {code}-{number}"
+| SMS(Local number) -> $"local number: {number}"
+
+//EXERCISE 8.4
+type YearsAsCustomer =
+    | LessThanAYear
+    | OneYear
+    | TwoYear
+    | MoreThanTwoYear
+
+type OverdraftStatus =
+    | InCredit
+    | Overdrawn
+
+type LoanDecision =
+    | LoanRejected
+    | LoanAccepted
+
+
+type CusDeet =
+    { YearsAsCustomer: YearsAsCustomer
+      OverDraftStatus: OverdraftStatus }
+
+let testCust =
+    { YearsAsCustomer = MoreThanTwoYear
+      OverDraftStatus = InCredit }
+
+let loanRequesting customerDetails =
+    match customerDetails with
+    | LessThanAYear, InCredit -> LoanRejected
+    | LessThanAYear, Overdrawn -> LoanRejected
+    | OneYear, InCredit -> LoanRejected
+    | _ -> LoanAccepted
