@@ -186,3 +186,41 @@ let loanRequesting customerDetails =
     | LessThanAYear, Overdrawn -> LoanRejected
     | OneYear, InCredit -> LoanRejected
     | _ -> LoanAccepted
+
+
+//Single-case discriminate unions
+type PhoneNumber = PhoneNumber of string
+type CountryCode = CountryCode of string
+
+type TelephoneNumberRevised =
+    | Local of PhoneNumber
+    | International of CountryCode * PhoneNumber
+
+let localNumber = Local(PhoneNumber "1234-1234-22")
+let internationalNumber = International(CountryCode "47", PhoneNumber "49494929")
+
+let altInternationalNumber =
+    let country = CountryCode "45"
+    let number = PhoneNumber "48328281"
+    International(country, number)
+
+
+//UNWRAPPING DISCRIMINATING UNIONS
+let foo (PhoneNumber number) = number
+let phnr = PhoneNumber "1234-1234"
+foo phnr
+let (PhoneNumber bob) = phnr
+
+bob
+
+// SINGLE-CASE DISCRIMINATING UNIONS TO ENVOFCE VARIANTS
+type Email = Email of address: string
+type ValidatedEmail = ValidatedEmail of Email
+
+let validateEmail (Email address) =
+    if address.Contains "@" then
+        ValidatedEmail(Email address)
+    else
+        failwith "Invalid Email!"
+
+let sendEmail (ValidatedEmail(Email address)) = address
