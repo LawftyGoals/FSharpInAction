@@ -148,6 +148,7 @@ match customer.ContactMethod with
 | Email address -> $"Emailing '{message}' to {address}"
 | Telephone(country, number) -> $"Calling {country}-{number} with the message '{message}'"
 | Post postDetails -> $"Printing letter with contents '{message}' to {postDetails.Line1} {postDetails.City}..."
+| _ -> "Added this to prevent warning on patternmatching"
 
 match customer.ContactMethod with
 | Telephone(country, number) -> $"Calling {country}-{number} with the message '{message}'"

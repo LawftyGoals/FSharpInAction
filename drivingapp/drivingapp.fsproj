@@ -7,6 +7,7 @@
 
   <ItemGroup><Compile Include="Car.fs" />
     <Compile Include="Program.fs" />
+    <None Include="boss.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
