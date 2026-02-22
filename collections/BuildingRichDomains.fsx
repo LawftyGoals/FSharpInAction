@@ -106,3 +106,166 @@ let ageToGroup: int option = bob |> Option.bind getAgeS
 match ageToGroup with
 | Some age -> age
 | None -> 0
+
+
+// OPTIONS AND COLLECTIONS
+
+let col = [ 1; 2; 3 ]
+
+let found = col |> List.find (fun t -> t < 2)
+let otherFound = List.find (fun t -> t > 1) col
+
+let tryFound = List.tryFind (fun t -> t > 2) col
+let tryNotFound = List.tryFind (fun t -> t > 3) col
+
+let extractFound =
+    match tryFound with
+    | Some nr -> nr
+    | None -> 0
+
+printfn $"{found} {otherFound} {extractFound} {tryNotFound}"
+
+//List.pick
+let pic = [ 1, 2, 3, 4 ]
+
+let resultPick =
+    List.pick
+        (fun l ->
+            match l with
+            | n -> Some n
+            | _ -> None)
+        pic
+
+
+//RESULTS
+type RawCustomer =
+    { CustomerId: string
+      Name: string
+      Street: string
+      City: string
+      Country: string
+      AccountBalance: decimal }
+
+type CustomerId = CustomerId of int
+type Name = Name of string
+type Street = Street of string
+type City = City of string
+
+type Country =
+    | Domestic
+    | Foreign of string
+
+type AccountBalance = AccountBalance of decimal
+
+type CookedCustomer =
+    { Id: CustomerId
+      Name: Name
+      Address:
+          {| Street: Street
+             City: City
+             Country: Country |}
+      Balance: AccountBalance }
+
+
+let validateCustomer (rawCustomer: RawCustomer) =
+    let customerId =
+        if rawCustomer.CustomerId.StartsWith "C" then
+            Ok(CustomerId(int rawCustomer.CustomerId[1..]))
+        else
+            Error $"Invalid Customer Id '{rawCustomer.CustomerId}"
+
+    let country =
+        match rawCustomer.Country with
+        | "" -> Error "No country supplied"
+        | "USA" -> Ok Domestic
+        | other -> Ok(Foreign other)
+
+    match customerId, country with
+    | Ok customerId, Ok country ->
+        Ok
+            { Id = customerId
+              Name = Name rawCustomer.Name
+              Address =
+                {| Street = Street rawCustomer.Street
+                   City = City rawCustomer.City
+                   Country = country |}
+              Balance = AccountBalance rawCustomer.AccountBalance }
+    | Error err, _
+    | _, Error err -> Error err
+
+
+// MULTIPLE ERROR RETURN
+let multiResultValidateCustomer rawCustomer =
+    let customerId =
+        if rawCustomer.CustomerId.StartsWith "C" then
+            Ok(CustomerId(int rawCustomer.CustomerId[1..]))
+        else
+            Error $"Invalid customer ID: {rawCustomer.CustomerId}"
+
+    let country =
+        match rawCustomer.Country with
+        | "" -> Error "No country selected"
+        | "Norway" -> Ok Domestic
+        | other -> Ok(Foreign other)
+
+    match customerId, country with
+    | Ok customerId, Ok country ->
+        Ok
+            { Id = customerId
+              Name = Name rawCustomer.Name
+              Address =
+                {| Street = Street rawCustomer.Street
+                   City = City rawCustomer.City
+                   Country = country |}
+              Balance = AccountBalance rawCustomer.AccountBalance }
+
+    | customerId, country ->
+        Error
+            [ match customerId with
+              | Ok _ -> ()
+              | Error x -> x
+              match country with
+              | Ok _ -> ()
+              | Error x -> x ]
+
+
+type CustomerValidationError =
+    | InvalidCustomerId of string
+    | InvalidName of string
+    | InvalidCountry of string
+
+
+let validateCustomerId (cId: string) =
+    if cId.StartsWith "C" then
+        Ok(CustomerId(int cId[1..]))
+    else
+        Error(InvalidCustomerId $"Invalid Customer Id: {cId}.")
+
+let validateCustomerCountry (country: string) =
+    match country with
+    | "" -> Error(InvalidCountry "No country selected")
+    | "Norway" -> Ok Domestic
+    | other -> Ok(Foreign other)
+
+let stronglyErroredValidateCustomer rawCustomer =
+    let customerId = validateCustomerId rawCustomer.CustomerId
+    let country = validateCustomerCountry rawCustomer.Country
+
+    match customerId, country with
+    | Ok customerId, Ok country ->
+        Ok
+            { Id = customerId
+              Name = Name rawCustomer.Name
+              Address =
+                {| Street = Street rawCustomer.Street
+                   City = City rawCustomer.City
+                   Country = country |}
+              Balance = AccountBalance rawCustomer.AccountBalance }
+    | customerId, country ->
+        Error
+            [ match customerId with
+              | Ok _ -> ()
+              | Error x -> x
+              match country with
+              | Ok _ -> ()
+              | Error x -> x ]
