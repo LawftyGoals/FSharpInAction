@@ -269,3 +269,104 @@ let stronglyErroredValidateCustomer rawCustomer =
               match country with
               | Ok _ -> ()
               | Error x -> x ]
+
+// HIERARCHY OF ERRORS
+open System
+
+module ValidationNested =
+    type CustomerIdError =
+        | EmptyId
+        | InvalidIdFormat of string
+
+    type NameError =
+        | NoNameSupplied
+        | TooManyParts
+
+    type CountryError = | NoCountrySupplied
+
+    type CustomerValidationError =
+        | CustomerIdError of CustomerIdError
+        | NameError of NameError
+        | CountryError of CountryError
+
+    let validateCustomerIdNested customerId =
+        if String.IsNullOrWhiteSpace customerId then
+            Error EmptyId
+        elif customerId.StartsWith "C" then
+            Ok(CustomerId(int customerId[1..]))
+        else
+            Error(InvalidIdFormat customerId)
+
+    let validateCountry country =
+        match country with
+        | "" -> Error NoCountrySupplied
+        | "Norway" -> Ok Domestic
+        | other -> Ok(Foreign other)
+
+    let validateName name =
+        if String.IsNullOrWhiteSpace name then
+            Error NoNameSupplied
+        elif name.Split " " |> Array.length > 2 then
+            Error TooManyParts
+        else
+            Ok(Name name)
+
+type CustomerValidationErrorRoot =
+    | CustomerIdError of ValidationNested.CustomerIdError
+    | NameError of ValidationNested.NameError
+    | CountryError of ValidationNested.CountryError
+
+let validateCustomerNestedRaw rawCustomer =
+    let customerId = ValidationNested.validateCustomerIdNested rawCustomer.CustomerId
+    let country = ValidationNested.validateCountry rawCustomer.Country
+    let name = ValidationNested.validateName rawCustomer.Name
+
+    match customerId, country, name with
+    | Ok customerId, Ok country, Ok name ->
+        Ok
+            { Id = customerId
+              Name = name
+              Address =
+                {| Street = Street rawCustomer.Street
+                   City = City rawCustomer.City
+                   Country = country |}
+              Balance = AccountBalance rawCustomer.AccountBalance }
+    | customerId, country, name ->
+        Error
+            [ match customerId with
+              | Ok _ -> ()
+              | Error error -> CustomerIdError error
+              match country with
+              | Ok _ -> ()
+              | Error error -> CountryError error
+              match name with
+              | Ok _ -> ()
+              | Error err -> NameError err ]
+
+let customerB =
+    { CustomerId = "123" // Bad customerId
+      Name = "    " // only whitespace name
+      Street = "123 Hoved gate"
+      City = "Anyvik"
+      Country = "" //No country supplied
+      AccountBalance = 123.45m }
+
+let validatedC2Nested = validateCustomerNestedRaw customerB
+
+// EXCEPTIONS
+module Exceptions =
+    try
+        Some(1 / 0)
+    with ex ->
+        printfn $"Error: {ex.Message}"
+        None
+
+    let handleException func arg =
+        try
+            func arg |> Ok
+        with ex ->
+            Error ex
+
+    let divide (a, b) = a / b
+    let divideSafe = handleException divide
+    let result = divideSafe (2, 0)
