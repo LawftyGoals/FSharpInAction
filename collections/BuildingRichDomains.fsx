@@ -370,3 +370,124 @@ module Exceptions =
     let divide (a, b) = a / b
     let divideSafe = handleException divide
     let result = divideSafe (2, 0)
+
+
+// COMPUTATIONAL EXPRESSIONS
+open System
+
+#r "nuget:FSToolkit.ErrorHandling, 2.13.0"
+open FsToolkit.ErrorHandling
+
+module ComputationalExpressions =
+    let calc (a: int) (b: int) (c: int) : int = a + b * c
+
+    let tryParseNumber (numberAsString: string) =
+        match Int32.TryParse numberAsString with
+        | true, number -> Some number
+        | false, _ -> None
+
+    let calcRest: int option =
+        match tryParseNumber "1", tryParseNumber "2", tryParseNumber "3" with
+        | Some firstNumber, Some secondNumber, Some thirdNumber -> Some(calc firstNumber secondNumber thirdNumber)
+        | _ -> None
+
+    let myMaybeData =
+        option {
+            let! numberOne = tryParseNumber "1"
+            let! numberTwo = tryParseNumber "2"
+            let! numberThree = tryParseNumber "3"
+            return calc numberOne numberTwo numberThree
+        }
+
+//EXERCISE 9.2
+module Validation =
+    type CustomerValidationErrorRich =
+        | EmptyCustomerId
+        | InvalidCustomerIdFormat of string
+        | NoNameSupplied
+        | TooManyNameParts
+        | NoCountrySupplied
+
+    let validateCustomerId customerId =
+        if String.IsNullOrWhiteSpace customerId then
+            Error EmptyCustomerId
+        elif customerId.StartsWith "C" then
+            Ok(CustomerId(int customerId[1..]))
+        else
+            Error(InvalidCustomerIdFormat customerId)
+
+    let validateCountry country =
+        match country with
+        | "" -> Error NoCountrySupplied
+        | "USA" -> Ok Domestic
+        | other -> Ok(Foreign other)
+
+    let validateName name =
+        if String.IsNullOrWhiteSpace name then
+            Error NoNameSupplied
+        elif name.Split ' ' |> Array.length > 2 then
+            Error TooManyNameParts
+        else
+            Ok(Name name)
+
+let validateCustomerFull (rawCustomer: RawCustomer) =
+    let customerId =
+        if String.IsNullOrWhiteSpace rawCustomer.CustomerId then
+            Error Validation.EmptyCustomerId
+        elif rawCustomer.CustomerId.StartsWith "C" then
+            Ok(CustomerId(int rawCustomer.CustomerId[1..]))
+        else
+            Error(Validation.InvalidCustomerIdFormat rawCustomer.CustomerId)
+
+    let country =
+        match rawCustomer.Country with
+        | "" -> Error Validation.NoCountrySupplied
+        | "USA" -> Ok Domestic
+        | other -> Ok(Foreign other)
+
+    let name =
+        if String.IsNullOrWhiteSpace rawCustomer.Name then
+            Error Validation.NoNameSupplied
+        elif rawCustomer.Name.Split ' ' |> Array.length > 2 then
+            Error Validation.TooManyNameParts
+        else
+            Ok(Name rawCustomer.Name)
+
+    match customerId, country, name with
+    | Ok customerId, Ok country, Ok name ->
+        Ok
+            { Id = customerId
+              Name = name
+              Address =
+                {| Street = Street rawCustomer.Street
+                   City = City rawCustomer.City
+                   Country = country |}
+              Balance = AccountBalance rawCustomer.AccountBalance }
+    | customerId, country, name ->
+        Error
+            [ match customerId with
+              | Ok _ -> ()
+              | Error err -> err
+              match country with
+              | Ok _ -> ()
+              | Error err -> err
+              match name with
+              | Ok _ -> ()
+              | Error err -> err ]
+
+let validateCustomerCE rawCustomer =
+    validation {
+        let! customerId = Validation.validateCustomerId rawCustomer.CustomerId
+
+        and! country = Validation.validateCountry rawCustomer.Country
+        and! name = Validation.validateName rawCustomer.Name
+
+        return
+            { Id = customerId
+              Name = name
+              Address =
+                {| Street = Street rawCustomer.Street
+                   City = City rawCustomer.City
+                   Country = country |}
+              Balance = AccountBalance rawCustomer.AccountBalance }
+    }
