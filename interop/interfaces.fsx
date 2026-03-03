@@ -51,3 +51,48 @@ let SetupWebApp () =
 // TUPLES
 let y = 1, 2 // regular reference tuple
 let x = struct (1, 2) // struct tupple "value based"
+
+
+// TRYPARSE
+let optionParse parser (value: string) =
+    match parser value with
+    | true, v -> Some v
+    | false, _ -> None
+
+let parseIntOption = optionParse System.Int32.TryParse
+
+let maybeANumber = parseIntOption "123"
+
+// SINGLE METHOD INTERFACES
+open System
+
+type IDisplayTime =
+    abstract Display: DateTime -> string
+
+let makeIDisplayTime implementation =
+    { new IDisplayTime with
+        member _.Display date = implementation date }
+
+
+let normalPrinter = makeIDisplayTime (fun date -> $"The tiem is now {date}!")
+
+let shortPrinter =
+    makeIDisplayTime (fun date -> $"It's {date.ToShortTimeString()}.")
+
+
+// PARTIAL APLICATION AND PIPELINES
+open System.IO
+
+module File =
+    let append (path: string) (text: string) =
+        File.AppendAllText(path, text)
+        path
+
+File.WriteAllText("text.txt", "test")
+
+let fileInfo =
+    "text.txt"
+    |> File.ReadAllText
+    |> fun text -> text.ToUpper()
+    |> File.append "otherfile.txt"
+    |> FileInfo
