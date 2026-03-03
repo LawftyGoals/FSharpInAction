@@ -125,3 +125,56 @@ let createReport (guitars: Deserializers.Guitar list) =
     |> List.countBy (fun guitar -> guitar.Brand)
     |> List.map (fun (Deserializers.Brand brand, count) -> {| Brand = brand; Guitars = count |})
     |> JsonSerializer.Serialize
+
+
+//JSON TYPE PROVIDER
+
+#r "nuget:FSharp.Data"
+open FSharp.Data
+
+[<Literal>]
+let SampleJson =
+    """{
+"Brand": "Ibanex",
+"Strings": "7",
+"Pickups": ["H", "S", "H"] }"""
+
+type GuitarJson = JsonProvider<const(__SOURCE_DIRECTORY__ + "\sample-guitar.json")>
+let sample = GuitarJson.GetSample()
+let description = $"{sample.Brand} has {sample.Strings} strings"
+
+//type ManyGuitarsOverHTTP =
+//    JsonProvider<"https://raw.githubusercontent.com/isaacabraham/fsharp-in-action/main/sample-guitars.json">
+
+//let inventory = ManyGuitarsOverHTTP.GetSamples()
+//printfn $"You have {inventory.Length} guitars in stock"
+//let fullInventory = ManyGuitarsOverHttp.Load(__SOURCE_DIRECTORY__ + "/full-inventory.json")
+
+//HTML TYPE PROVIDER
+type LondonBoroughs = HtmlProvider<"https://en.wikipedia.org/wiki/List_of_London_boroughs">
+
+let boroughs =
+    LondonBoroughs.GetSample().Tables.``List of boroughs and local authorities``
+
+boroughs.Rows |> Array.map (fun row -> row.Borough)
+
+
+#r "nuget:FSharp.Data"
+open FSharp.Data
+// CSVPROVIDER
+type testCSV = CsvProvider<const(__SOURCE_DIRECTORY__ + "/test.csv")>
+let csvSample = testCSV.GetSample()
+
+for r in csvSample.Rows do
+    printfn $"{r.Username}"
+
+
+// DATA VISUALIZATION
+#r "nuget: Plotly.NET"
+open Plotly.NET
+
+let density =
+    boroughs.Rows
+    |> Array.map (fun row -> row.Borough, row.``Population (2022 est)`` / row.``Area - sq mi``)
+
+density |> Array.sortBy snd |> Chart.Column |> Chart.show
