@@ -1,0 +1,8 @@
+//GET http://localhost:5000/device/status HTTP/1.1
+
+
+
+POST http://localhost:5000/device/status
+content-type: application/json
+
+{ "deviceId" : 13 }
