@@ -51,3 +51,111 @@ File name: 'C:\Users\mymsn\Documents\FSharp\bar.txt'
 let delaytext = Task.Delay(10000).ContinueWith(fun _ -> 100)
 
 delaytext.Wait() // makes asynchronous synchronous again!
+
+
+//TASK BLOCK - F# ASYNC AWAIT
+let writeToFile fileName (data: string) =
+    System.IO.File.AppendAllText(fileName, data)
+    let data = System.IO.File.ReadAllText fileName
+    data.Length
+
+let total = writeToFile "sample.txt" "foo"
+
+let writeToFileAsync fileName (data: string) =
+    task {
+        do! System.IO.File.AppendAllTextAsync(fileName, data)
+        let! data = System.IO.File.ReadAllTextAsync fileName
+        return data.Length
+    }
+
+// EXECUTE MULTIPLE TASKS
+open System
+
+let multiTask =
+    task {
+        let! allFiles =
+            [ "file1.txt"; "file2.txt"; "file3.txt" ]
+            |> List.map File.ReadAllTextAsync
+            |> Task.WhenAll
+
+        return allFiles |> Array.reduce (sprintf "%s %s")
+    }
+
+
+// EMBEDDING A TASK BLOCK WITH LARGER EXPRESSION
+
+let writeToFileAsyncMix fileName (data: string) =
+    printfn "1. This is happening synchronously!"
+    Task.Delay(1000).Wait()
+    printfn "2. Kicking off the background work!"
+
+    let result =
+        task {
+            do! System.IO.File.AppendAllTextAsync(fileName, data)
+            do! Task.Delay(1000)
+            printfn "4. This is happening asynchronously!"
+            let! data = System.IO.File.ReadAllTextAsync fileName
+            return data.Length
+        }
+
+    printfn "3. Doing something more now let's run this task"
+    result
+
+writeToFileAsyncMix "bob.txt" "yabadabadooo"
+
+
+//ASYNC BLOCK
+let writeToFileAsyncAsync fileName (data: string) =
+    async {
+        do! System.IO.File.AppendAllTextAsync(fileName, data) |> Async.AwaitTask
+        let! data = System.IO.File.ReadAllTextAsync(fileName) |> Async.AwaitTask
+        return data.Length
+    }
+
+
+// Standard synchronous call chain
+open System.Text.Json
+
+let loadCustomerFromDb customerId = {| Name = "Isaac"; Balance = 0 |}
+
+let tryGetCustomer customerId =
+    let customer = loadCustomerFromDb customerId
+
+    if customer.Balance <= 0 then
+        Error "Customer is in debt!"
+    else
+        Ok customer
+
+let handleRequest (json: string) =
+    let request: {| CustomerId: int |} = JsonSerializer.Deserialize json
+    let response = tryGetCustomer request.CustomerId
+
+    match response with
+    | Ok c -> {| CustomerName = c.Name.ToUpper() |}
+    | Error msg -> failwith $"Bad request: {msg}"
+
+//BECOMES
+let loadCustomerFromDbTask customerId =
+    task { return {| Name = "Isaac"; Balance = 0 |} }
+
+let tryGetCustomerTask customerId =
+    task {
+        let! customer = loadCustomerFromDbTask customerId
+
+        return
+            if customer.Balance <= 0 then
+                Error "Customer is in debt!"
+            else
+                Ok customer
+    }
+
+let handleRequestTask (json: string) =
+    task {
+        let request: {| CustomerId: int |} = JsonSerializer.Deserialize json
+        let! response = tryGetCustomerTask request.CustomerId
+
+        return
+            match response with
+            | Ok c -> {| CustomerName = c.Name.ToUpper() |}
+            | Error msg -> failwith $"Bad request: {msg}"
+    }
