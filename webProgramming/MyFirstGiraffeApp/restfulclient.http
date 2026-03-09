@@ -1,4 +1,4 @@
-//GET http://localhost:5000/device/status HTTP/1.1
+GET http://localhost:5000/device/status?deviceId=55 HTTP/1.1
 
 
 

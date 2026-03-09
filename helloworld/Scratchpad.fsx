@@ -50,3 +50,10 @@ let floatEls = combineElements 1.0 2.0 3.0
 
 
 // EXERCISE 6.3
+
+
+let bob = {| H1 = 1; H2 = 2; H3 = 3 |}
+
+let bob2 = {| bob with H2 = 4; H3 = 6 |}
+
+printfn $"{bob2.H2}"
